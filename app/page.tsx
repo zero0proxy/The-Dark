@@ -41,43 +41,51 @@ export default function Game() {
   const restart = () => setCurrentSceneId(storyData.start);
 
   return (
-    <div style={styles.page}>
-      {/* Полупрозрачный тёмный фон (можно потом заменить на картинку-фон, если захочешь) */}
-      <div style={styles.bgOverlay} />
+    <>
+      <div style={styles.page}>
+        <div style={styles.bgOverlay} />
 
-      <div style={styles.container}>
-        {/* Заголовок сцены */}
-        {scene.title && <h1 style={styles.title}>{scene.title}</h1>}
+        <div style={styles.container}>
+          {scene.title && <h1 style={styles.title}>{scene.title}</h1>}
 
-        {/* Иллюстрация — теперь отдельная картинка над текстом */}
-        <div style={styles.imageWrapper}>
-          <img src={scene.image} alt="Иллюстрация" style={styles.image} />
-        </div>
+          <div style={styles.imageWrapper}>
+            <img src={scene.image} alt="Иллюстрация" style={styles.image} />
+          </div>
 
-        {/* Текст повествования */}
-        <div style={styles.textBox}>
-          <p style={styles.text}>{scene.text}</p>
-        </div>
+          <div style={styles.textBox}>
+            <p style={styles.text}>{scene.text}</p>
+          </div>
 
-        {/* Кнопки выбора */}
-        <div style={styles.buttons}>
-          {scene.choices.length > 0 ? (
-            scene.choices.map((c, i) => (
-              <button key={i} onClick={() => choose(c.next)} style={styles.button}>
-                {c.text}
+          <div style={styles.buttons}>
+            {scene.choices.length > 0 ? (
+              scene.choices.map((c, i) => (
+                <button key={i} onClick={() => choose(c.next)} style={styles.button}>
+                  {c.text}
+                </button>
+              ))
+            ) : (
+              <button onClick={restart} style={styles.restartButton}>
+                Начать сначала
               </button>
-            ))
-          ) : (
-            <button onClick={restart} style={styles.restartButton}>
-              Начать сначала
-            </button>
-          )}
+            )}
+          </div>
         </div>
+
+        <audio ref={bgRef} />
+        <audio ref={sfxRef} />
       </div>
 
-      <audio ref={bgRef} />
-      <audio ref={sfxRef} />
-    </div>
+      {/* Глобальные стили для ховера — безопасно для SSR */}
+      <style jsx global>{`
+        button {
+          transition: all 0.3s ease !important;
+        }
+        button:hover {
+          transform: translateY(-6px) scale(1.03);
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+      `}</style>
+    </>
   );
 }
 
@@ -94,7 +102,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: '"Georgia", "Times New Roman", serif',
   },
   bgOverlay: {
-    position: 'absolute',
+    position: 'absolute' as const,
     inset: 0,
     background: 'radial-gradient(circle at center, #111 0%, #000 100%)',
     zIndex: 1,
@@ -124,7 +132,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   image: {
     display: 'block',
-    width: 'clamp(280px, 80vw, 460px)',   // ← компактный размер
+    width: 'clamp(280px, 80vw, 460px)',
     height: 'auto',
     borderRadius: '12px',
     border: '1px solid rgba(255,255,255,0.1)',
@@ -149,17 +157,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '560px',
     margin: '0 auto',
   },
-    button: {
+  button: {
     padding: '18px 30px',
     fontSize: 'clamp(18px, 4vw, 24px)',
     background: 'rgba(255,255,255,0.12)',
     border: '2px solid rgba(255,255,255,0.3)',
     borderRadius: '15px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    backdropFilter: 'blur(10px)',
-    color: 'white',           // ← вот это добавь
+    color: 'white',
     fontWeight: '600' as const,
+    backdropFilter: 'blur(10px)',
   },
   restartButton: {
     padding: '20px 40px',
@@ -168,14 +175,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: 'none',
     borderRadius: '15px',
     cursor: 'pointer',
+    color: 'white',
     fontWeight: 'bold' as const,
-    color: 'white',           // ← и сюда тоже
   },
 };
-
-// Ховер-эффекты
-const hoverStyle = document.createElement('style');
-hoverStyle.innerHTML = `
-  button:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-`;
-document.head.appendChild(hoverStyle);
