@@ -1,0 +1,39 @@
+{
+  "start": "scene1",
+  "scenes": {
+    "scene1": {
+      "text": "Ты просыпаешься посреди ночи.. Хм.. Пить хочется..",
+      "image": "/images/character.png",
+      "backgroundMusic": "/audio/background.mp3",
+      "soundEffect": "/audio/door-creak.mp3",
+      "choices": [
+        { "text": "Протереть глаза и осмотреться", "next": "scene2" },
+        { "text": "Взять телефон", "next": "scene3" }
+      ]
+    },
+    "scene2": {
+      "text": "Да блин, почему так темно..",
+      "image": "/images/dark-room.png",
+      "backgroundMusic": "/audio/spooky.mp3",
+      "soundEffect": "/audio/footsteps.mp3",
+      "choices": [
+        { "text": "Взять телефон", "next": "end1" },
+        { "text": "Включить свет", "next": "scene1" }
+      ]
+    },
+    "scene3": {
+      "text": "Ты нащупываешь телефон на прикроватной тумбочке. Свет экрана ярко ослепляет твои глаза.",
+      "image": "/images/garden.png",
+      "backgroundMusic": "/audio/peaceful.mp3",
+      "soundEffect": null,
+      "choices": []
+    },
+    "end1": {
+      "text": "Велико достижение. Ты просто взял телефон в руки.",
+      "image": "/images/treasure.png",
+      "backgroundMusic": "/audio/victory.mp3",
+      "soundEffect": "/audio/cheer.mp3",
+      "choices": []
+    }
+  }
+}

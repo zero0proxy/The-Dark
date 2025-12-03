@@ -1,65 +1,181 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useRef } from 'react';
+import storyData from '../data/story.json';
+
+interface Scene {
+  title?: string;
+  text: string;
+  image: string;
+  backgroundMusic?: string | null;
+  soundEffect?: string | null;
+  choices: { text: string; next: string }[];
+}
+
+export default function Game() {
+  const [currentSceneId, setCurrentSceneId] = useState(storyData.start);
+  const scene = storyData.scenes[currentSceneId as keyof typeof storyData.scenes] as Scene;
+
+  const bgRef = useRef<HTMLAudioElement>(null);
+  const sfxRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (scene.backgroundMusic && bgRef.current) {
+      bgRef.current.src = scene.backgroundMusic;
+      bgRef.current.loop = true;
+      bgRef.current.volume = 0.4;
+      bgRef.current.play().catch(() => {});
+    }
+    if (scene.soundEffect && sfxRef.current) {
+      sfxRef.current.src = scene.soundEffect;
+      sfxRef.current.volume = 0.7;
+      sfxRef.current.play().catch(() => {});
+    }
+  }, [currentSceneId]);
+
+  const choose = (id: string) => {
+    if (bgRef.current) bgRef.current.pause();
+    setCurrentSceneId(id);
+  };
+
+  const restart = () => setCurrentSceneId(storyData.start);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={styles.page}>
+      {/* Полупрозрачный тёмный фон (можно потом заменить на картинку-фон, если захочешь) */}
+      <div style={styles.bgOverlay} />
+
+      <div style={styles.container}>
+        {/* Заголовок сцены */}
+        {scene.title && <h1 style={styles.title}>{scene.title}</h1>}
+
+        {/* Иллюстрация — теперь отдельная картинка над текстом */}
+        <div style={styles.imageWrapper}>
+          <img src={scene.image} alt="Иллюстрация" style={styles.image} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Текст повествования */}
+        <div style={styles.textBox}>
+          <p style={styles.text}>{scene.text}</p>
         </div>
-      </main>
+
+        {/* Кнопки выбора */}
+        <div style={styles.buttons}>
+          {scene.choices.length > 0 ? (
+            scene.choices.map((c, i) => (
+              <button key={i} onClick={() => choose(c.next)} style={styles.button}>
+                {c.text}
+              </button>
+            ))
+          ) : (
+            <button onClick={restart} style={styles.restartButton}>
+              Начать сначала
+            </button>
+          )}
+        </div>
+      </div>
+
+      <audio ref={bgRef} />
+      <audio ref={sfxRef} />
     </div>
   );
 }
+
+const styles: { [key: string]: React.CSSProperties } = {
+  page: {
+    minHeight: '100vh',
+    background: '#000',
+    color: 'white',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    fontFamily: '"Georgia", "Times New Roman", serif',
+  },
+  bgOverlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'radial-gradient(circle at center, #111 0%, #000 100%)',
+    zIndex: 1,
+  },
+  container: {
+    position: 'relative',
+    zIndex: 10,
+    textAlign: 'center',
+    maxWidth: '800px',
+    width: '100%',
+  },
+  title: {
+    fontSize: 'clamp(32px, 7vw, 60px)',
+    marginBottom: '30px',
+    textShadow: '0 4px 15px rgba(0,0,0,0.8)',
+    fontWeight: 'bold' as const,
+  },
+  imageWrapper: {
+    margin: '0 auto 35px',
+    width: 'fit-content',
+    padding: '12px',
+    background: 'rgba(20,20,30,0.8)',
+    borderRadius: '18px',
+    border: '2px solid rgba(180,140,80,0.6)',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.7), inset 0 0 20px rgba(180,140,80,0.15)',
+    maxWidth: '90vw',
+  },
+  image: {
+    display: 'block',
+    width: 'clamp(280px, 80vw, 460px)',   // ← компактный размер
+    height: 'auto',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.6)',
+  },
+  textBox: {
+    background: 'rgba(0,0,0,0.65)',
+    padding: '25px 35px',
+    borderRadius: '20px',
+    border: '1px solid rgba(255,255,255,0.2)',
+    marginBottom: '50px',
+    backdropFilter: 'blur(8px)',
+  },
+  text: {
+    fontSize: 'clamp(18px, 4vw, 26px)',
+    lineHeight: '1.7',
+  },
+  buttons: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '18px',
+    maxWidth: '560px',
+    margin: '0 auto',
+  },
+    button: {
+    padding: '18px 30px',
+    fontSize: 'clamp(18px, 4vw, 24px)',
+    background: 'rgba(255,255,255,0.12)',
+    border: '2px solid rgba(255,255,255,0.3)',
+    borderRadius: '15px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(10px)',
+    color: 'white',           // ← вот это добавь
+    fontWeight: '600' as const,
+  },
+  restartButton: {
+    padding: '20px 40px',
+    fontSize: 'clamp(20px, 5vw, 28px)',
+    background: '#b8860b',
+    border: 'none',
+    borderRadius: '15px',
+    cursor: 'pointer',
+    fontWeight: 'bold' as const,
+    color: 'white',           // ← и сюда тоже
+  },
+};
+
+// Ховер-эффекты
+const hoverStyle = document.createElement('style');
+hoverStyle.innerHTML = `
+  button:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+`;
+document.head.appendChild(hoverStyle);
